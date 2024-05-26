@@ -1,26 +1,33 @@
 <script setup>
 import router from '@/router';
 import { getArticleService } from '@/api/article.js';
+import { cancelCollectService, collectService } from '@/api/collection.js';
 import {
     Search,
     Location,
     ChatRound
 } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
-import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount, onBeforeMount } from 'vue'
 import LoadingVue from '@/components/Loading.vue';
-// 初始喜欢图标
-const likeIconClass = ref('icon-hear');
-//初始收藏图标
-const collectionIconClass = ref('icon-star');
+import { useTokenStore } from '@/stores/token';
+import { cancelLikeService, likeService } from '@/api/like.js';
+import { parseJson } from '@/utils/parseJson';
+
+//用户信息
+const tokenStore = useTokenStore();
+
 //加载状态变量
 const loading = ref(false);
+
 //次级导航索引
 const articleIndex = ref(1);
 
+//文章是否查询完
+const articleIsEnd = ref(false);
 
 //查询传输数据
-const ArticlePageQueryDTO = ref({
+const articlePageQueryDTO = ref({
     page: 1,
     pageSize: 5,
     condition: '',
@@ -33,111 +40,96 @@ const banner = ref([
     "../../public/banner/songshan.jpeg",
 ])
 
-//提取出的文章文本
-const articleContent=ref([]);
-
 //文章
-const articles = ref([
-    {
-        id: 1,
-        user: {
-            username: 'cz',
-            url: '../../public/banner/huangshan.jpg'
-        },
-        title: '晋中三日访古行记',
-        content: `{
-        "content": [
-        {
-            "type": "text",
-            "value": "This is some text before the image."
-        },
-        {
-            "type": "image",
-            "url": "https://example.com/images/my-image.jpg"
-        },
-        {
-            "type": "text",
-            "value": "This is some text after the image."
+const articles = ref([])
+
+//文章的文字内容
+const text = ref([]);
+
+//提取文本
+const getText = (data) => {
+    for (let i = 0; i < data.length; i++) {
+        let content = data[i].content;
+        let temp = '';
+        for (let j = 0; j < content.length; j++) {
+            if (content[j].type === 'text') {
+                if (temp.length <= 136) {
+                    temp += content[j].value;
+                    if (temp.length > 136) {
+                        temp = temp.slice(0, 136) + '...'
+                        break;
+                    }
+                }
+            }
         }
-        ]
-        }`,
-        url: '../../public/banner/huangshan.jpg',
-        province: '北京',
-        like: 99,
-        collection: 999,
-        comment: 0
-    },
-
-    // {
-    //     id: 1,
-    //     user: {
-    //         username: 'cz',
-    //         url: '../../public/banner/huangshan.jpg'
-    //     },
-    //     title: '晋中三日访古行记',
-    //     content: '从连日的发烧头疼中解脱出来，很像是一个人在水下憋气了很久终于游到水面上透了口气，整个身体湿答答的，可是一身轻松。自从得过一次新冠后，咳嗽的毛病始终没好，去医院检查，医生说肺子没毛病，等天暖和就好了，然而这已是第二个暖和的春天，此后体质似乎大不如前，一点风吹草动不是引来发烧就是引来鼻塞或是更厉害的咳嗽。',
-    //     url: '../../public/banner/huangshan.jpg',
-    //     province: '北京',
-    //     like: 99,
-    //     collection: 999,
-    //     comment: 10
-    // },
-
-])
-
-//解析json
-const parseJson = (data) => {
-    for (let i = 0; i < data.value.length; i++) {
-        try {
-            const jsonObject = JSON.parse(data.value[i].content);
-            data.value[i].content=jsonObject;
-            console.log(data.value);
-        } catch (error) {
-            console.error("无效的 JSON 字符串", error);
-        }
+        text.value.push(temp);
     }
 }
 
-//提取文本
-const getText=()=>{
-    
+//初始化收藏喜欢图标
+const initIcon = (data) => {
+    for (let i = 0; i < data.length; i++) {
+        data[i].collectionIconClass = data[i].isCollected === 1 ? 'icon-star-full' : 'icon-star';
+        data[i].likeIconClass = data[i].isLiked === 1 ? 'icon-hear-full' : 'icon-hear';
+    }
 }
 
 //初始化页面查询、切换导航时查询、搜索
-const searchArticle = () => {
-    let result = getArticleService(ArticlePageQueryDTO.value);
+const searchArticle = async () => {
+    //清空页数
+    articlePageQueryDTO.value.page = 1;
+    articleIsEnd.value = false;
+    let result = await getArticleService(articlePageQueryDTO.value);
     if (result.code === 1) {
+        //文章查询完毕
+        if (result.data.length < 5) {
+            articleIsEnd.value = true;
+        }
+        //将json解析为对象
         parseJson(result.data);
+        initIcon(result.data);
         articles.value = result.data;
+        articlePageQueryDTO.value.page += 1;
+        text.value = [];
+        getText(articles.value);
     } else {
         ElMessage.error("查询异常");
+        console.log(result);
     }
 }
 
 //模拟延迟加载更多文章
 const fetchMoreArticles = () => {
     loading.value = true;
-    setTimeout(() => {
-        console.log('到底了');
-        // let result = getArticleService(ArticlePageQueryDTO.value);
-        // if (result.code === 1) {
-        //     articles.value.push(result.data);
-        //     ArticlePageQueryDTO.value.page += 1;
-        // } else {
-        //     ElMessage.error("查询异常");
-        // }
+    setTimeout(async () => {
+        // console.log('到底了');
+        let result = await getArticleService(articlePageQueryDTO.value);
+        if (result.code === 1) {
+            //文章查询完毕
+            if (result.data.length < 5) {
+                articleIsEnd.value = true;
+            }
+            parseJson(result.data);
+            initIcon(result.data);
+            for (let i = 0; i < result.data.length; i++) {
+                articles.value.push(result.data[i]);
+            }
+            articlePageQueryDTO.value.page += 1;
+            //提取文字
+            getText(result.data);
+        } else {
+            ElMessage.error("查询异常");
+        }
         loading.value = false;
     }, 800);
-
 };
 
 //鼠标滚轮滑动查询
 const handleScroll = () => {
     const scrollTop = window.scrollY;
     const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-
-    if (scrollTop + windowHeight >= documentHeight - 0.5 && !loading.value) {
+    const documentHeight = document.body.scrollHeight;
+    if (scrollTop + windowHeight >= documentHeight && !loading.value && !articleIsEnd.value) {
         fetchMoreArticles();
     }
 };
@@ -145,42 +137,114 @@ const handleScroll = () => {
 //切换导航
 const changeNav = (index) => {
     articleIndex.value = index;
-    ArticlePageQueryDTO.value.searchBy = index === 1 ? 'new' : 'hot';
+    articlePageQueryDTO.value.searchBy = index === 1 ? 'new' : 'hot';
     searchArticle();
 }
 
 //修改喜欢图标
-const changeLikeIcon = () => {
-    likeIconClass.value = likeIconClass.value === 'icon-hear' ? 'icon-hear-full' : 'icon-hear';
+const changeLikeIcon = async (index) => {
+    if (tokenStore.token.jwt === '') {
+        ElMessage.error("请先登录")
+    } else if (articles.value[index].isLiked === 1) {
+        //修改成功则改样式及数量
+        if (await cancelLike(articles.value[index].id)) {
+            articles.value[index].isLiked = 0;
+            articles.value[index].likeIconClass = 'icon-hear';
+            articles.value[index].likes--;
+        }
+    } else {
+        if (await like(articles.value[index].id)) {
+            articles.value[index].isLiked = 1;
+            articles.value[index].likeIconClass = 'icon-hear-full';
+            articles.value[index].likes++;
+        }
+    }
 }
 
-//修改收藏图标
-const changeCollectionIcon = () => {
-    collectionIconClass.value = collectionIconClass.value === 'icon-star' ? 'icon-star-full' : 'icon-star';
+//喜欢          
+const like = async (id) => {
+    let result = await likeService(id);
+    if (result.code === 1) {
+        return true;
+    } else {
+        ElMessage.error(result.msg);
+        return false;
+    }
 }
 
-const goToArticleDetail = () => {
-    router.push("/articleDetail");
+//取消喜欢
+const cancelLike = async (id) => {
+    let result = await cancelLikeService(id);
+    if (result.code === 1) {
+        return true;
+    } else {
+        ElMessage.error(result.msg);
+        return false;
+    }
 }
 
-onMounted(() => {
-    searchArticle();
+//修改收藏图标 调用接口
+const changeCollectionIcon = async (index) => {
+    if (tokenStore.token.jwt === '') {
+        ElMessage.error("请先登录")
+    } else if (articles.value[index].isCollected === 1) {
+        //修改成功则改样式及数量
+        if (await cancelCollect(articles.value[index].id)) {
+            articles.value[index].isCollected = 0;
+            articles.value[index].collectionIconClass = 'icon-star';
+            articles.value[index].collection--;
+        }
+    } else {
+        if (await collect(articles.value[index].id)) {
+            articles.value[index].isCollected = 1;
+            articles.value[index].collectionIconClass = 'icon-star-full';
+            articles.value[index].collection++;
+        }
+    }
+}
+
+//收藏
+const collect = async (id) => {
+    let result = await collectService(id);
+    if (result.code === 1) {
+        return true;
+    } else {
+        ElMessage.error(result.msg);
+        return false;
+    }
+}
+
+//取消收藏接口
+const cancelCollect = async (id) => {
+    let result = await cancelCollectService(id);
+    if (result.code === 1) {
+        return true;
+    } else {
+        ElMessage.error(result.msg);
+        return false;
+    }
+}
+
+const goToArticleDetail = (articleId) => {
+    // router.push("/articleDetail");
+    router.push({ name: 'ArticleDetail', params: { articleId } });
+}
+
+onBeforeMount(async () => {
+    await searchArticle();
     window.addEventListener('scroll', handleScroll);
-
 })
 
 onBeforeUnmount(() => {
     window.removeEventListener('scroll', handleScroll);
 });
-
-
 </script>
 
 <template>
     <!-- 加载效果 -->
     <LoadingVue v-if="loading == true"></LoadingVue>
     <!-- 轮播图 -->
-    <el-carousel height="450px" style="margin-top: 61px;">
+    <el-carousel height="450px">
         <el-carousel-item v-for="item in banner" :key="item">
             <img :src="item" alt="加载失败" class="banner_img">
         </el-carousel-item>
@@ -192,19 +256,19 @@ onBeforeUnmount(() => {
                 <el-menu-item class="menu-item" index="1" @click="changeNav(1)">最新</el-menu-item>
                 <el-menu-item class="menu-item" index="2" @click="changeNav(2)">最热</el-menu-item>
             </el-menu>
-            <el-input v-model="ArticlePageQueryDTO.condition" class="search_input" placeholder="搜索你感兴趣的地方"
+            <el-input v-model="articlePageQueryDTO.condition" class="search_input" placeholder="搜索你感兴趣的地方"
                 @keyup.enter="searchArticle()" />
             <el-button class="search_btn" :icon="Search" @click="searchArticle()" />
         </header>
         <!-- 文章列表 -->
-        <div v-for="article in articles" :key="article.id" class="card">
+        <div v-for="(article, index) in articles" :key="index" class="card">
             <!-- 文章封面 -->
-            <img :src="article.url" alt="加载失败" class="article_img" @click="goToArticleDetail()">
+            <img :src="article.url" alt="加载失败" class="article_img" @click="goToArticleDetail(article.id)">
             <div>
                 <!-- 文章标题和内容 -->
-                <div style="margin-left: 20px;" @click="goToArticleDetail()">
+                <div style="margin-left: 20px;" @click="goToArticleDetail(article.id)">
                     <h2 class="title" style="line-height: 0;">{{ article.title }}</h2>
-                    <p style="margin-top: 30px;">{{ article.content }}</p>
+                    <p style="margin-top: 40px;">{{ text[index] }}</p>
                 </div>
                 <!-- 文章页脚 -->
                 <div style="display: flex;justify-content: center;">
@@ -218,13 +282,13 @@ onBeforeUnmount(() => {
                         </el-icon>
                         <span>{{ article.province }}</span>
                     </div>
-                    <div class="contentItem" @click="changeCollectionIcon()">
-                        <span :class="['iconfont', collectionIconClass]"></span>
+                    <div class="contentItem" @click="changeCollectionIcon(index)">
+                        <span :class="['iconfont', article.collectionIconClass]"></span>
                         <span>{{ article.collection }}</span>
                     </div>
-                    <div class="contentItem" @click="changeLikeIcon()">
-                        <span :class="['iconfont', likeIconClass]"></span>
-                        <span>{{ article.like }}</span>
+                    <div class="contentItem" @click="changeLikeIcon(index)">
+                        <span :class="['iconfont', article.likeIconClass]"></span>
+                        <span>{{ article.likes }}</span>
                     </div>
                     <div class="contentItem">
                         <el-icon>
@@ -236,6 +300,8 @@ onBeforeUnmount(() => {
             </div>
         </div>
     </main>
+    <!-- 没有更多内容 -->
+    <div class="end" v-if="articleIsEnd">没有更多文章</div>
 </template>
 
 <style scoped>
@@ -319,5 +385,11 @@ h2 {
     width: 30px;
     height: 30px;
     border-radius: 50%;
+}
+
+.end {
+    width: fit-content;
+    margin: 0 auto;
+    color: rgb(76, 80, 83);
 }
 </style>

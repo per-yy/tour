@@ -16,7 +16,7 @@ instance.interceptors.request.use(
         //添加token
         const tokenStore = useTokenStore();
         if (tokenStore.token) {
-            config.headers.Authorization = tokenStore.token
+            config.headers.jwt = tokenStore.token.jwt
         }
         return config;
     }
@@ -29,6 +29,7 @@ instance.interceptors.response.use(
     },
     err => {
         //异步的状态转化成失败的状态
+        console.log("请求错误");
         return Promise.reject(err);
     }
 )

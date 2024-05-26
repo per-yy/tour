@@ -6,13 +6,19 @@ import HomeVue from '@/views/Home.vue';
 import ScenicSpotVue from '@/views/ScenicSpot.vue';
 import FollowVue from '@/views/Follow.vue';
 import ArticleDetailVue from '@/views/detailPages/ArticleDetail.vue';
+import ScenicSpotDetailVue from '@/views/detailPages/ScenicSpotDetail.vue';
+import MyVue from "@/views/selfPage/My.vue"
+import WriteArticleVue from '@/views/write/WriteArticle.vue'
 
 // 定义路由关系
 const routes = [
     { path: '/', component: HomeVue },
     { path: '/scenicSpot', component: ScenicSpotVue },
     { path: '/follow', component: FollowVue },
-    { path: '/articleDetail', component: ArticleDetailVue },
+    { name: 'ArticleDetail', path: '/articleDetail/:articleId', component: ArticleDetailVue },
+    { name: 'ScenicSpotDetail', path: '/scenicSpotDetail/:scenicSpotId', component: ScenicSpotDetailVue },
+    { path: '/my', component: MyVue },
+    { path: '/writeArticle', component: WriteArticleVue }
 ];
 
 // 创建路由器
