@@ -119,7 +119,8 @@ const disableButton = () => {
 }
 
 const handleAvatarSuccess = (response, uploadFile) => {
-    user.value.url = URL.createObjectURL(uploadFile.raw)
+    // user.value.url = URL.createObjectURL(uploadFile.raw)
+    user.value.url=response;
 }
 
 const beforeAvatarUpload = (rawFile) => {
@@ -137,11 +138,11 @@ onMounted(async () => {
     await getUserInfo();
 })
 
-const goToMyPage=()=>{
+const goToMyPage = () => {
     router.push('/my')
 }
 
-const goToWriteArticle=()=>{
+const goToWriteArticle = () => {
     router.push('/writeArticle')
 }
 
@@ -156,7 +157,7 @@ const goToWriteArticle=()=>{
             <el-menu-item class="menu-item" index="/follow">关注</el-menu-item>
         </el-menu>
         <!-- 登录情况 -->
-        <div class="button" v-if="!isLogin">
+        <div class="button" v-if="tokenStore.token.jwt === ''">
             <el-button class="btn" type="success" @click="loginDialogVisible = true">登录</el-button>
             <el-button class="btn" type="info" plain @click="regDialogVisible = true">注册</el-button>
         </div>

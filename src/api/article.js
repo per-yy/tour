@@ -14,3 +14,28 @@ export const getFollowedArticleService = (articlePageQueryDTO) => {
 export const getArticleByIdService=(id)=>{
     return request.get(`/article/detail/${id}`);
 }
+
+//查询我的文章
+export const getMyArticleService=()=>{
+    return request.get('/article/my');
+}
+
+//删除文章
+export const deleteArticleService=(id)=>{
+    return request.post(`/article/delete/${id}`);
+}
+
+//查询我收藏的文章
+export const getMyCollectArticleService=()=>{
+    return request.get('/article/myCollection')
+}
+
+//查询我喜欢的文章
+export const getMyLikeArticleService=()=>{
+    return request.get("/article/myLike");
+}
+
+//发布文章
+export const uploadArticleService=(article)=>{
+    return request.post("/article/add",article);
+}

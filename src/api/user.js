@@ -36,3 +36,18 @@ export const followUserService=(id)=>{
 export const unFollowUserService=(id)=>{
     return request.post(`/unfollow/${id}`);
 }
+
+//查询关注的用户
+export const getFollowedUserService=()=>{
+    return request.get('/followee/list');
+}
+
+//修改用户信息 包括用户名和头像
+export const updateUserInfoService=(user)=>{
+    return request.post('/user/updateInfo',user);
+}
+
+//修改密码
+export const updatePasswordService=(password)=>{
+    return request.post('/user/updatePassword',password);
+}

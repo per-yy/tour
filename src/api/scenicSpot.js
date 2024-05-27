@@ -8,3 +8,8 @@ export const getScenicSpotService = (scenicSpotPageQueryDTO) => {
 export const getScenicSpotByIdService=(id)=>{
     return request.get(`/scenicSpot/detail/${id}`);
 }
+
+//根据省份id查询景点
+export const getAllScenicSpotService=(id)=>{
+    return request.get(`/scenicSpot/list/${id}`);
+}

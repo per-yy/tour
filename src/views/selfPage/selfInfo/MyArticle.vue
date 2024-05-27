@@ -1,62 +1,52 @@
 <script setup>
+import { getMyArticleService, deleteArticleService } from '@/api/article';
+import { likeService, cancelLikeService } from '@/api/like';
+import { collectService, cancelCollectService } from '@/api/collection';
+import { onBeforeMount, ref } from 'vue';
+import { parseJson } from '@/utils/parseJson';
 import router from '@/router';
-import { getArticleService } from '@/api/article.js';
-import { cancelCollectService, collectService } from '@/api/collection.js';
+import { useTokenStore } from '@/stores/token';
 import {
-    Search,
     Location,
-    ChatRound
+    ChatRound,
+    Delete
 } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
-import { ref, onBeforeUnmount, onBeforeMount } from 'vue'
-import LoadingVue from '@/components/Loading.vue';
-import { useTokenStore } from '@/stores/token';
-import { cancelLikeService, likeService } from '@/api/like.js';
-import { parseJson } from '@/utils/parseJson';
 
-//用户信息
+const articles = ref([{}]);
+
 const tokenStore = useTokenStore();
 
-//加载状态变量
-const loading = ref(false);
+//删除文章时的提示
+const deleteDialogVisible = ref(false);
 
-//次级导航索引
-const articleIndex = ref(1);
-
-//文章是否查询完
-const articleIsEnd = ref(false);
-
-//查询传输数据
-const articlePageQueryDTO = ref({
-    page: 1,
-    pageSize: 5,
-    condition: '',
-    searchBy: 'new'
-})
-
-const banner = ref([
-    "../../public/banner/huangshan.jpg",
-    "../../public/banner/sanqingshan.jpg",
-    "../../public/banner/songshan.jpeg",
-])
-
-//文章
-const articles = ref([])
+//待删除的文章id
+const articleIndexForDelete = ref();
 
 //文章的文字内容
 const text = ref([]);
+
+//查询我的文章
+const getMyArticle = async () => {
+    let result = await getMyArticleService();
+    articles.value = result.data;
+    initIcon(articles.value);
+    parseJson(articles.value);
+    getText(articles.value);
+}
 
 //提取文本
 const getText = (data) => {
     for (let i = 0; i < data.length; i++) {
         let content = data[i].content;
         let temp = '';
+        let textLen = 118;
         for (let j = 0; j < content.length; j++) {
             if (content[j].type === 'text') {
-                if (temp.length <= 136) {
+                if (temp.length <= textLen) {
                     temp += content[j].value;
-                    if (temp.length > 136) {
-                        temp = temp.slice(0, 136) + '...'
+                    if (temp.length > textLen) {
+                        temp = temp.slice(0, textLen) + '...'
                         break;
                     }
                 }
@@ -66,79 +56,13 @@ const getText = (data) => {
     }
 }
 
+
 //初始化收藏喜欢图标
 const initIcon = (data) => {
     for (let i = 0; i < data.length; i++) {
         data[i].collectionIconClass = data[i].isCollected === 1 ? 'icon-star-full' : 'icon-star';
         data[i].likeIconClass = data[i].isLiked === 1 ? 'icon-hear-full' : 'icon-hear';
     }
-}
-
-//初始化页面查询、切换导航时查询、搜索
-const searchArticle = async () => {
-    //清空页数
-    articlePageQueryDTO.value.page = 1;
-    articleIsEnd.value = false;
-    let result = await getArticleService(articlePageQueryDTO.value);
-    if (result.code === 1) {
-        //文章查询完毕
-        if (result.data.length < 5) {
-            articleIsEnd.value = true;
-        }
-        //将json解析为对象
-        parseJson(result.data);
-        initIcon(result.data);
-        articles.value = result.data;
-        articlePageQueryDTO.value.page += 1;
-        text.value = [];
-        getText(articles.value);
-    } else {
-        ElMessage.error("查询异常");
-        console.log(result);
-    }
-}
-
-//模拟延迟加载更多文章
-const fetchMoreArticles = () => {
-    loading.value = true;
-    setTimeout(async () => {
-        // console.log('到底了');
-        let result = await getArticleService(articlePageQueryDTO.value);
-        if (result.code === 1) {
-            //文章查询完毕
-            if (result.data.length < 5) {
-                articleIsEnd.value = true;
-            }
-            parseJson(result.data);
-            initIcon(result.data);
-            for (let i = 0; i < result.data.length; i++) {
-                articles.value.push(result.data[i]);
-            }
-            articlePageQueryDTO.value.page += 1;
-            //提取文字
-            getText(result.data);
-        } else {
-            ElMessage.error("查询异常");
-        }
-        loading.value = false;
-    }, 800);
-};
-
-//鼠标滚轮滑动查询
-const handleScroll = () => {
-    const scrollTop = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.body.scrollHeight;
-    if (scrollTop + windowHeight >= documentHeight && !loading.value && !articleIsEnd.value) {
-        fetchMoreArticles();
-    }
-};
-
-//切换导航
-const changeNav = (index) => {
-    articleIndex.value = index;
-    articlePageQueryDTO.value.searchBy = index === 1 ? 'new' : 'hot';
-    searchArticle();
 }
 
 //修改喜欢图标
@@ -225,41 +149,26 @@ const cancelCollect = async (id) => {
     }
 }
 
-const goToArticleDetail = (articleId) => {
-    // router.push("/articleDetail");
-    router.push({ name: 'ArticleDetail', params: { articleId } });
+//删除文章
+const deleteArticle = () => {
+    let result = deleteArticleService(articles.value[articleIndexForDelete.value].id);
+    deleteDialogVisible.value = false;
+    //删除文章列表中的文章
+    articles.value.splice(articleIndexForDelete.value, 1);
+    ElMessage.success('删除成功')
 }
 
 onBeforeMount(async () => {
-    await searchArticle();
-    window.addEventListener('scroll', handleScroll);
+    await getMyArticle();
 })
 
-onBeforeUnmount(() => {
-    window.removeEventListener('scroll', handleScroll);
-});
+const goToArticleDetail = (articleId) => {
+    router.push({ name: 'ArticleDetail', params: { articleId } });
+}
 </script>
 
 <template>
-    <!-- 加载效果 -->
-    <LoadingVue v-if="loading == true"></LoadingVue>
-    <!-- 轮播图 -->
-    <el-carousel height="450px">
-        <el-carousel-item v-for="item in banner" :key="item">
-            <img :src="item" alt="加载失败" class="banner_img">
-        </el-carousel-item>
-    </el-carousel>
     <main>
-        <!-- 二级导航 -->
-        <header>
-            <el-menu class="nav" mode="horizontal" default-active="1" active-text-color="#24BD51">
-                <el-menu-item class="menu-item" index="1" @click="changeNav(1)">最新</el-menu-item>
-                <el-menu-item class="menu-item" index="2" @click="changeNav(2)">最热</el-menu-item>
-            </el-menu>
-            <el-input v-model="articlePageQueryDTO.condition" class="search_input" placeholder="搜索你感兴趣的地方"
-                @keyup.enter="searchArticle()" />
-            <el-button class="search_btn" :icon="Search" @click="searchArticle()" />
-        </header>
         <!-- 文章列表 -->
         <div v-for="(article, index) in articles" :key="index" class="card">
             <!-- 文章封面 -->
@@ -267,15 +176,11 @@ onBeforeUnmount(() => {
             <div>
                 <!-- 文章标题和内容 -->
                 <div style="margin-left: 20px;" @click="goToArticleDetail(article.id)">
-                    <h2 class="title" style="line-height: 0;">{{ article.title }}</h2>
+                    <h2 class="title" style="line-height: 0px;">{{ article.title }}</h2>
                     <p style="margin-top: 40px;">{{ text[index] }}</p>
                 </div>
                 <!-- 文章页脚 -->
                 <div style="display: flex;justify-content: center;">
-                    <div class="contentItem">
-                        <img class="avatar" :src="article.user.url" alt="">
-                        <span>{{ article.user.username }}</span>
-                    </div>
                     <div class="contentItem">
                         <el-icon>
                             <Location />
@@ -296,46 +201,31 @@ onBeforeUnmount(() => {
                         </el-icon>
                         <span>{{ article.comment }}</span>
                     </div>
+                    <div class="contentItem" @click="deleteDialogVisible = true; articleIndexForDelete = index">
+                        <el-icon>
+                            <Delete />
+                        </el-icon>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
-    <!-- 没有更多内容 -->
-    <div class="end" v-if="articleIsEnd">没有更多文章</div>
+    <!-- 删除文章时的确认提示 -->
+    <el-dialog v-model="deleteDialogVisible" title="提示" width="20%" center align-center>
+        <span>你确定要删除这篇文章吗</span>
+        <template #footer>
+            <div>
+                <el-button @click="deleteDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="deleteArticle()">
+                    确认
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 </template>
-
 <style scoped>
-.banner_img {
-    width: 100%;
-}
-
 main {
-    width: 1000px;
-    margin: 0 auto;
-    border-radius: 3px;
-    box-shadow: 0px 0 5px 0 rgba(0, 0, 0, 0.2);
-}
-
-header {
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid var(--el-menu-border-color);
-}
-
-.nav {
-    width: 350px;
-    border-bottom: none !important;
-}
-
-
-.search_input {
-    height: 45px;
-    width: 500px;
-    margin-left: 100px;
-}
-
-.search_btn {
-    height: 45px;
+    margin-top: 0px;
 }
 
 .card {
@@ -382,17 +272,5 @@ h2 {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-}
-
-.end {
-    width: fit-content;
-    margin: 0 auto;
-    color: rgb(76, 80, 83);
-}
-</style>
-
-<style>
-.menu-item:hover {
-    color: #24BD51 !important;
 }
 </style>

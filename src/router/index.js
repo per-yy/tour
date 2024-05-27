@@ -7,8 +7,13 @@ import ScenicSpotVue from '@/views/ScenicSpot.vue';
 import FollowVue from '@/views/Follow.vue';
 import ArticleDetailVue from '@/views/detailPages/ArticleDetail.vue';
 import ScenicSpotDetailVue from '@/views/detailPages/ScenicSpotDetail.vue';
-import MyVue from "@/views/selfPage/My.vue"
-import WriteArticleVue from '@/views/write/WriteArticle.vue'
+import MyVue from "@/views/selfPage/My.vue";
+import WriteArticleVue from '@/views/write/WriteArticle.vue';
+import MyArticleVue from '@/views/selfPage/selfInfo/MyArticle.vue';
+import MyFollowVue from '@/views/selfPage/selfInfo/MyFollow.vue';
+import MyLikeVue from '@/views/selfPage/selfInfo/MyLike.vue';
+import MyCollectionVue from '@/views/selfPage/selfInfo/MyCollection.vue';
+
 
 // 定义路由关系
 const routes = [
@@ -17,7 +22,14 @@ const routes = [
     { path: '/follow', component: FollowVue },
     { name: 'ArticleDetail', path: '/articleDetail/:articleId', component: ArticleDetailVue },
     { name: 'ScenicSpotDetail', path: '/scenicSpotDetail/:scenicSpotId', component: ScenicSpotDetailVue },
-    { path: '/my', component: MyVue },
+    {
+        path: '/my', component: MyVue, redirect: '/my/article', children: [
+            { path: '/my/article', component: MyArticleVue },
+            { path: '/my/follow', component: MyFollowVue },
+            { path: '/my/like', component: MyLikeVue },
+            { path: '/my/collection', component: MyCollectionVue },
+        ]
+    },
     { path: '/writeArticle', component: WriteArticleVue }
 ];
 

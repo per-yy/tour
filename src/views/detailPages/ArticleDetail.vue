@@ -177,7 +177,7 @@ const cancelCollect = async (id) => {
 const changeFollowState = async () => {
     if (article.value.isFollowed === 1) {
         //已关注说明已经登录 不用判断
-        let result = await unFollowUserService(article.value.id);
+        let result = await unFollowUserService(article.value.user.id);
         if (result.code === 1) {
             article.value.isFollowed = 0;
         } else {
@@ -188,7 +188,7 @@ const changeFollowState = async () => {
         if (!isLoggedIn) {
             ElMessage.error('请先登录')
         } else {
-            let result = await followUserService(article.value.id);
+            let result = await followUserService(article.value.user.id);
             if (result.code === 1) {
                 article.value.isFollowed = 1;
             } else {
@@ -211,15 +211,6 @@ const sendComment = async () => {
     }
 }
 
-// onMounted(async () => {
-//     // try {
-//     //     const jsonObject = JSON.parse(article.value.content);
-//     //     article.value.content = jsonObject.content;
-//     // } catch (error) {
-//     //     console.error("无效的 JSON 字符串", error);
-//     // }
-//     // console.log(article.value);
-// })
 
 //初始化一些数据 例如评论之类
 const initData = () => {
@@ -245,7 +236,7 @@ onBeforeMount(async () => {
                 <img :src="article.user.url" alt="">
                 <span>{{ article.user.username }}</span>
             </div>
-            <el-button v-if="!isSelf" :type="article.isFollowed ? 'info' : 'success'" @click="changeFollowState()" >
+            <el-button v-if="!isSelf" :type="article.isFollowed ? 'info' : 'success'" @click="changeFollowState()">
                 <span v-if="article.isFollowed">已关注</span>
                 <span v-else>关注</span>
             </el-button>
@@ -279,7 +270,7 @@ onBeforeMount(async () => {
         <!-- 根据登录状态不同展示 -->
         <div class="sendComment">
             <img :src="article.user.url" alt="" v-if="isLoggedIn">
-            <el-input placeholder="评论一下叭" v-model="commentContent" :disabled="!isLoggedIn"
+            <el-input autosize type="textarea" placeholder="评论一下叭" v-model="commentContent" :disabled="!isLoggedIn"
                 @keydown.enter="sendComment()"></el-input>
             <el-button @click="sendComment()" :disabled="!isLoggedIn">{{ isLoggedIn ? '发送' : '请先登录' }}</el-button>
         </div>
@@ -289,7 +280,7 @@ onBeforeMount(async () => {
                     <img :src="item.user.url" alt="">
                     <span>{{ item.user.username }}</span>
                 </div>
-                <span>{{ item.content }}</span>
+                <span style=" word-wrap: break-word;">{{ item.content }}</span>
             </div>
         </div>
     </main>
@@ -354,10 +345,10 @@ main {
     border: 1px solid rgb(191, 186, 186);
 }
 
-.sendComment .el-input {
-    height: 35px;
+.sendComment .el-textarea {
     margin: 10px;
 }
+
 
 .sendComment img {
     width: 35px;
