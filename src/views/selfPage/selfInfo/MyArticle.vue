@@ -13,6 +13,9 @@ const deleteDialogVisible = ref(false);
 //待删除的文章id
 const articleIndexForDelete = ref();
 
+//在article list中判断
+const isMyArticlePage=ref(true);
+
 //查询我的文章
 const getMyArticle = async () => {
     let result = await getMyArticleService();
@@ -47,7 +50,7 @@ onBeforeMount(async () => {
 
 <template>
     <main>
-        <ArticleListVue :articles></ArticleListVue>
+        <ArticleListVue :articles :isMyArticlePage></ArticleListVue>
     </main>
     <!-- 删除文章时的确认提示 -->
     <el-dialog v-model="deleteDialogVisible" title="提示" width="20%" center align-center>

@@ -3,15 +3,20 @@ import { cancelCollectService, collectService } from '@/api/collection.js';
 import { cancelLikeService, likeService } from '@/api/like.js';
 import { useTokenStore } from '@/stores/token';
 import router from '@/router';
-import { defineProps, onMounted } from 'vue';
+import { defineProps } from 'vue';
 import {
     Location,
-    ChatRound
+    ChatRound,
+    Delete
 } from '@element-plus/icons-vue';
 // 接收传递的 articles 数据
 const props = defineProps({
     articles: {
         type: Array,
+        required: true
+    },
+    isMyArticlePage:{
+        type:Boolean,
         required: true
     }
 });
@@ -143,6 +148,12 @@ const cancelCollect = async (id) => {
                         <ChatRound />
                     </el-icon>
                     <span>{{ article.comment }}</span>
+                </div>
+                <!-- 在我的文章页面显示删除键 -->
+                <div class="contentItem" v-if="isMyArticlePage">
+                    <el-icon>
+                        <Delete />
+                    </el-icon>
                 </div>
             </div>
         </div>
