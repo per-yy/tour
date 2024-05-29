@@ -149,8 +149,8 @@ onBeforeMount(async () => {
 .content {
     width: 100%;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
 }
 
 video {
