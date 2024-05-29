@@ -2,7 +2,7 @@
 export const extractTextFromHTML = (html) => {
     let text = html.replace(/<[^>]*>/g, '');
     //截取前num个字符
-    let num = 106;
+    let num = 100;
     if (text.length > num) {
         text = text.slice(0, num) + '...'
 

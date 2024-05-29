@@ -2,8 +2,11 @@
 import { cancelCollectService, collectService } from '@/api/collection.js';
 import { cancelLikeService, likeService } from '@/api/like.js';
 import { useTokenStore } from '@/stores/token';
+import { deleteArticleService } from '@/api/article';
 import router from '@/router';
+import { ref } from 'vue';
 import { defineProps } from 'vue';
+import { ElMessage } from 'element-plus';
 import {
     Location,
     ChatRound,
@@ -15,8 +18,8 @@ const props = defineProps({
         type: Array,
         required: true
     },
-    isMyArticlePage:{
-        type:Boolean,
+    isMyArticlePage: {
+        type: Boolean,
         required: true
     }
 });
@@ -24,6 +27,11 @@ const props = defineProps({
 //用户信息
 const tokenStore = useTokenStore();
 
+//删除文章时的提示
+const deleteDialogVisible = ref(false);
+
+//待删除的文章索引
+const articleIndexForDelete = ref(0);
 
 const goToArticleDetail = (articleId) => {
     router.push({ name: 'ArticleDetail', params: { articleId } });
@@ -111,15 +119,23 @@ const cancelCollect = async (id) => {
         return false;
     }
 }
+//删除文章
+const deleteArticle = async () => {
+    let result = await deleteArticleService(props.articles[articleIndexForDelete.value].id);
+    deleteDialogVisible.value = false;
+    //删除文章列表中的文章
+    props.articles.splice(articleIndexForDelete.value, 1);
+    ElMessage.success('删除成功')
+}
 </script>
 <template>
     <!-- 文章列表 -->
     <div v-for="(article, index) in props.articles" :key="index" class="card">
         <!-- 文章封面 -->
         <img :src="article.url" alt="加载失败" class="article_img" @click="goToArticleDetail(article.id)">
-        <div>
+        <div style="width: 500px;">
             <!-- 文章标题和内容 -->
-            <div style="margin-left: 20px;" @click="goToArticleDetail(article.id)">
+            <div style="margin-left: 20px;height: 135px;" @click="goToArticleDetail(article.id)">
                 <h2 class="title" style="line-height: 0;">{{ article.title }}</h2>
                 <p style="margin-top: 40px;">{{ article.text }}</p>
             </div>
@@ -150,7 +166,8 @@ const cancelCollect = async (id) => {
                     <span>{{ article.comment }}</span>
                 </div>
                 <!-- 在我的文章页面显示删除键 -->
-                <div class="contentItem" v-if="isMyArticlePage">
+                <div class="contentItem" v-if="isMyArticlePage"
+                    @click="deleteDialogVisible = true; articleIndexForDelete = index">
                     <el-icon>
                         <Delete />
                     </el-icon>
@@ -158,6 +175,18 @@ const cancelCollect = async (id) => {
             </div>
         </div>
     </div>
+    <!-- 删除文章时的确认提示 -->
+    <el-dialog v-model="deleteDialogVisible" title="提示" width="20%" center align-center>
+        <span>你确定要删除这篇文章吗</span>
+        <template #footer>
+            <div>
+                <el-button @click="deleteDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="deleteArticle()">
+                    确认
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 <style scoped>
 .card {
@@ -190,6 +219,7 @@ h2 {
     border-radius: 5px;
     width: 342px;
     height: 180px;
+    object-fit: cover;
 }
 
 .contentItem {
