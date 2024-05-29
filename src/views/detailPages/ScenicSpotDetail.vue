@@ -122,7 +122,7 @@ onBeforeMount(async () => {
 
 <template>
     <div class="content">
-        <video :src="scenicSpot.videoUrl" autoplay controls></video>
+        <video :src="scenicSpot.videoUrl" autoplay controls muted></video>
         <div class="describe">
             <div class="header-row">
                 <h3>{{ scenicSpot.sceneRollCall }}</h3>

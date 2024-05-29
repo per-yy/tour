@@ -163,7 +163,7 @@ onBeforeMount(() => {
 header {
     display: flex;
     align-items: center;
-    margin-top: 30px;
+    justify-content: space-between;
 }
 
 header div {
@@ -182,10 +182,6 @@ header div span {
     margin-left: 20px;
     font-size: 30px;
     font-weight: 800
-}
-
-header .button {
-    margin-left: 46%;
 }
 
 main {

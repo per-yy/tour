@@ -191,7 +191,7 @@ const logout = () => {
                 </el-form-item>
                 <el-form-item>
                     <el-input class="input" type="password" v-model="user.password" autocomplete="off" placeholder="密码"
-                        style="width: 467px;" />
+                        style="width: 467px;" @keydown.enter="login()" />
                 </el-form-item>
             </el-form>
             <template #footer>
