@@ -252,6 +252,7 @@ onBeforeMount(async () => {
             <h1>{{ article.title }}</h1>
             <!-- 内容 在这插入HTML -->
             <div id="articleContent"></div>
+            <div style="margin-bottom: 10px;"><span>发布于：{{ article.createTime }}</span></div>
             <!-- 文章页脚 -->
             <div style="display: flex;justify-content: center;">
                 <div class="contentItem" @click="changeLikeIcon()">
@@ -293,11 +294,10 @@ onBeforeMount(async () => {
 main {
     width: 900px;
     margin: 0 auto;
-    margin-top: 65px;
     border-radius: 5px;
     padding: 20px;
     box-shadow: 0px 0 5px 0 rgba(0, 0, 0, 0.2);
-    background-color: rgb(246, 248, 249);
+    background-color: rgb(247, 255, 253);
 }
 
 .user {

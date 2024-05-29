@@ -90,12 +90,14 @@ onBeforeMount(async () => {
     <div class="content">
         <video :src="scenicSpot.videoUrl" autoplay controls></video>
         <div class="describe">
-            <h3>{{ scenicSpot.sceneRollCall }}</h3>
-            <div class="contentItem" @click="changeLikeIcon()">
-                <span :class="['iconfont', scenicSpot.likeIconClass]"></span>
-                <span>{{ scenicSpot.likes }}</span>
+            <div class="header-row">
+                <h3>{{ scenicSpot.sceneRollCall }}</h3>
+                <div class="contentItem" @click="changeLikeIcon()">
+                    <span :class="['iconfont', scenicSpot.likeIconClass]"></span>
+                    <span>{{ scenicSpot.likes }}</span>
+                </div>
             </div>
-            <span>{{ scenicSpot.content }}</span>
+            <span class="content-text">{{ scenicSpot.content }}</span>
         </div>
     </div>
 </template>
@@ -118,9 +120,16 @@ video {
 .describe {
     width: 900px;
     margin-bottom: 30px;
+    display: flex;  
+    flex-direction: column; 
 }
+.header-row {  
+    display: flex;  
+    justify-content: space-between;  
+    align-items: center; 
+} 
 
-h3 {
-    width: 800px
+.iconfont {
+    margin-right: 8px;
 }
 </style>

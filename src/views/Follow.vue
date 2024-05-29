@@ -1,14 +1,14 @@
 <script setup>
-import { useTokenStore } from '@/stores/token';
+
 import { ref, onBeforeMount } from 'vue';
 import { getFollowedArticleService } from '@/api/article';
 import { getFollowedUsers } from '@/api/user';
-import { cancelLikeService, likeService } from '@/api/like.js';
-import { cancelCollectService, collectService } from '@/api/collection.js';
 import LoadingVue from '@/components/Loading.vue';
 import { getText } from '@/utils/parseHTML';
-//用户信息
-const tokenStore = useTokenStore();
+import ArticleListVue from '@/components/ArticleList.vue';
+
+//被选中的用户
+const selectedUserIndex = ref(-1);
 
 //文章
 const articles = ref([]);
@@ -32,90 +32,6 @@ const articlePageQueryDTO = ref({
 
 //滚动条
 const scrollbar = ref(null);
-
-//修改喜欢图标
-const changeLikeIcon = async (index) => {
-    if (tokenStore.token.jwt === '') {
-        ElMessage.error("请先登录")
-    } else if (articles.value[index].isLiked === 1) {
-        //修改成功则改样式及数量
-        if (await cancelLike(articles.value[index].id)) {
-            articles.value[index].isLiked = 0;
-            articles.value[index].likeIconClass = 'icon-hear';
-            articles.value[index].likes--;
-        }
-    } else {
-        if (await like(articles.value[index].id)) {
-            articles.value[index].isLiked = 1;
-            articles.value[index].likeIconClass = 'icon-hear-full';
-            articles.value[index].likes++;
-        }
-    }
-}
-
-//喜欢          
-const like = async (id) => {
-    let result = await likeService(id);
-    if (result.code === 1) {
-        return true;
-    } else {
-        ElMessage.error(result.msg);
-        return false;
-    }
-}
-
-//取消喜欢
-const cancelLike = async (id) => {
-    let result = await cancelLikeService(id);
-    if (result.code === 1) {
-        return true;
-    } else {
-        ElMessage.error(result.msg);
-        return false;
-    }
-}
-
-//修改收藏图标 调用接口
-const changeCollectionIcon = async (index) => {
-    if (tokenStore.token.jwt === '') {
-        ElMessage.error("请先登录")
-    } else if (articles.value[index].isCollected === 1) {
-        //修改成功则改样式及数量
-        if (await cancelCollect(articles.value[index].id)) {
-            articles.value[index].isCollected = 0;
-            articles.value[index].collectionIconClass = 'icon-star';
-            articles.value[index].collection--;
-        }
-    } else {
-        if (await collect(articles.value[index].id)) {
-            articles.value[index].isCollected = 1;
-            articles.value[index].collectionIconClass = 'icon-star-full';
-            articles.value[index].collection++;
-        }
-    }
-}
-
-//收藏
-const collect = async (id) => {
-    let result = await collectService(id);
-    if (result.code === 1) {
-        return true;
-    } else {
-        ElMessage.error(result.msg);
-        return false;
-    }
-}
-
-//取消收藏接口
-const cancelCollect = async (id) => {
-    let result = await cancelCollectService(id);
-    if (result.code === 1) {
-        return true;
-    } else {
-        ElMessage.error(result.msg);
-        return false;
-    }
-}
 
 //查询用户
 const searchUsers = async () => {
@@ -158,6 +74,7 @@ const searchArticle = async () => {
 
 //切换左侧用户并查询
 const changeUser = (index) => {
+    selectedUserIndex.value = index;
     //判断是否是全部用户
     if (index === -1) {
         articlePageQueryDTO.value.condition = '';
@@ -204,10 +121,6 @@ const handleScroll = () => {
     }
 };
 
-const goToArticleDetail = () => {
-    router.push("/articleDetail");
-}
-
 onBeforeMount(async () => {
     await searchUsers();
     await searchArticle();
@@ -222,10 +135,12 @@ onBeforeMount(async () => {
         <!-- 侧边栏 -->
         <el-scrollbar height="630px" style="width: 200px;">
             <el-menu default-active="0">
-                <el-menu-item class="user-list" index="-1" @click="changeUser(-1)">
+                <el-menu-item :class="['user-list', { 'selected-user': selectedUserIndex === -1 }]" index="-1"
+                    @click="changeUser(-1)">
                     <span style="margin-left: 44px;">全部关注</span>
                 </el-menu-item>
-                <el-menu-item class="user-list" :index="i" v-for="(user, i) in users" :key="i" @click="changeUser(i)">
+                <el-menu-item :class="['user-list', { 'selected-user': selectedUserIndex === i }]" :index="i"
+                    v-for="(user, i) in users" :key="i" @click="changeUser(i)">
                     <img :src="user.url" alt="" style="width: 40px;height: 40px; border-radius: 50%;">
                     <span>{{ user.username }}</span>
                 </el-menu-item>
@@ -233,48 +148,10 @@ onBeforeMount(async () => {
         </el-scrollbar>
 
         <!-- 文章 -->
-        <el-scrollbar ref="scrollbar" height="630px" style="margin: 60px auto 0; margin-left: 55px;"
+        <el-scrollbar ref="scrollbar" height="630px" style="margin: 0 auto 0; margin-left: 150px;"
             @scroll="handleScroll()">
             <main>
-                <!-- 文章列表 -->
-                <div v-for="(article, index) in articles" :key="index" class="card">
-                    <!-- 文章封面 -->
-                    <img :src="article.url" alt="加载失败" class="article_img" @click="goToArticleDetail()">
-                    <div>
-                        <!-- 文章标题和内容 -->
-                        <div style="margin-left: 20px;" @click="goToArticleDetail()">
-                            <h2 class="title" style="line-height: 0;">{{ article.title }}</h2>
-                            <p style="margin-top: 40px;">{{ article.text }}</p>
-                        </div>
-                        <!-- 文章页脚 -->
-                        <div style="display: flex;justify-content: center;">
-                            <div class="contentItem">
-                                <img class="avatar" :src="article.user.url" alt="">
-                                <span>{{ article.user.username }}</span>
-                            </div>
-                            <div class="contentItem">
-                                <el-icon>
-                                    <Location />
-                                </el-icon>
-                                <span>{{ article.province }}</span>
-                            </div>
-                            <div class="contentItem" @click="changeCollectionIcon(index)">
-                                <span :class="['iconfont', article.collectionIconClass]"></span>
-                                <span>{{ article.collection }}</span>
-                            </div>
-                            <div class="contentItem" @click="changeLikeIcon(index)">
-                                <span :class="['iconfont', article.likeIconClass]"></span>
-                                <span>{{ article.likes }}</span>
-                            </div>
-                            <div class="contentItem">
-                                <el-icon>
-                                    <ChatRound />
-                                </el-icon>
-                                <span>{{ article.comment }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ArticleListVue :articles></ArticleListVue>
             </main>
             <!-- 没有更多内容 -->
             <div class="end" v-if="articleIsEnd">没有更多文章</div>
@@ -295,57 +172,15 @@ onBeforeMount(async () => {
     margin-left: 20px;
 }
 
+.selected-user {
+    background-color: rgb(40, 201, 161);
+}
+
 main {
     width: 900px;
     border-radius: 3px;
     box-shadow: 0px 0 5px 0 rgba(0, 0, 0, 0.2);
     margin: 0 auto;
-}
-
-.card {
-    display: flex;
-    height: 180px;
-    margin-bottom: 10px;
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-h2 {
-    color: rgb(91, 85, 85);
-}
-
-.card:hover {
-    background-color: #F8F8F8;
-}
-
-.card h2:hover {
-    color: rgb(9, 154, 43);
-}
-
-.card p:hover {
-    color: rgb(91, 84, 84);
-}
-
-.article_img {
-    margin: 5px;
-    border-radius: 5px;
-}
-
-.contentItem {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-grow: 1;
-}
-
-.contentItem span {
-    margin-left: 10px;
-}
-
-.avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
 }
 
 .end {

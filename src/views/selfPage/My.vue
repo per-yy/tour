@@ -12,6 +12,8 @@ const updateUserInfoDialogVisible = ref(false);
 
 const updatePasswordDialogVisible = ref(false);
 
+const imgType=['image/jpeg','image/png','image/webp']
+
 //用户信息 用于修改信息
 const user = ref({
     username: '',
@@ -46,12 +48,11 @@ const updateUserInfo = async () => {
 }
 
 const handleAvatarSuccess = (response, uploadFile) => {
-    // user.value.url = URL.createObjectURL(uploadFile.raw)
     user.value.url=response;
 }
 
 const beforeAvatarUpload = (rawFile) => {
-    if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
+    if (!imgType.includes(rawFile.type)) {
         ElMessage.error('图片格式错误')
         return false
     } else if (rawFile.size / 1024 / 1024 > 2) {
@@ -155,6 +156,7 @@ onBeforeMount(() => {
     width: 900px;
     padding: 20px;
     margin: 0 auto;
+    background-color: rgb(246, 255, 253);
     box-shadow: 0px 0 5px 0 rgba(0, 0, 0, 0.2);
 }
 

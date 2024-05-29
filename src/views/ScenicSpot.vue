@@ -203,7 +203,7 @@ const handleScroll = () => {
     const scrollTop = window.scrollY;
     const windowHeight = window.innerHeight;
     const documentHeight = document.body.scrollHeight;
-    if (scrollTop + windowHeight >= documentHeight && !loading.value && !scenicSpotIsEnd.value) {
+    if (scrollTop + windowHeight >= documentHeight - 1 && !loading.value && !scenicSpotIsEnd.value) {
         fetchMoreScenicSpot();
     }
 };
