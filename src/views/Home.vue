@@ -12,7 +12,8 @@ import { ref, onBeforeUnmount, onBeforeMount } from 'vue'
 import LoadingVue from '@/components/Loading.vue';
 import { useTokenStore } from '@/stores/token';
 import { cancelLikeService, likeService } from '@/api/like.js';
-import { parseJson } from '@/utils/parseJson';
+import { getText } from '@/utils/parseHTML';
+import { getBannerService } from '@/api/banner';
 
 //用户信息
 const tokenStore = useTokenStore();
@@ -34,36 +35,16 @@ const articlePageQueryDTO = ref({
     searchBy: 'new'
 })
 
-const banner = ref([
-    "../../public/banner/huangshan.jpg",
-    "../../public/banner/sanqingshan.jpg",
-    "../../public/banner/songshan.jpeg",
-])
+//轮播图
+const banner = ref([])
 
 //文章
 const articles = ref([])
 
-//文章的文字内容
-const text = ref([]);
-
-//提取文本
-const getText = (data) => {
-    for (let i = 0; i < data.length; i++) {
-        let content = data[i].content;
-        let temp = '';
-        for (let j = 0; j < content.length; j++) {
-            if (content[j].type === 'text') {
-                if (temp.length <= 136) {
-                    temp += content[j].value;
-                    if (temp.length > 136) {
-                        temp = temp.slice(0, 136) + '...'
-                        break;
-                    }
-                }
-            }
-        }
-        text.value.push(temp);
-    }
+//查询轮播图
+const getBanner = async () => {
+    let result = await getBannerService();
+    banner.value = result.data;
 }
 
 //初始化收藏喜欢图标
@@ -85,12 +66,9 @@ const searchArticle = async () => {
         if (result.data.length < 5) {
             articleIsEnd.value = true;
         }
-        //将json解析为对象
-        parseJson(result.data);
         initIcon(result.data);
         articles.value = result.data;
         articlePageQueryDTO.value.page += 1;
-        text.value = [];
         getText(articles.value);
     } else {
         ElMessage.error("查询异常");
@@ -109,7 +87,6 @@ const fetchMoreArticles = () => {
             if (result.data.length < 5) {
                 articleIsEnd.value = true;
             }
-            parseJson(result.data);
             initIcon(result.data);
             for (let i = 0; i < result.data.length; i++) {
                 articles.value.push(result.data[i]);
@@ -231,6 +208,7 @@ const goToArticleDetail = (articleId) => {
 }
 
 onBeforeMount(async () => {
+    await getBanner();
     await searchArticle();
     window.addEventListener('scroll', handleScroll);
 })
@@ -245,8 +223,8 @@ onBeforeUnmount(() => {
     <LoadingVue v-if="loading == true"></LoadingVue>
     <!-- 轮播图 -->
     <el-carousel height="450px">
-        <el-carousel-item v-for="item in banner" :key="item">
-            <img :src="item" alt="加载失败" class="banner_img">
+        <el-carousel-item v-for="item in banner" :key="item.id">
+            <img :src="item.url" alt="加载失败" class="banner_img">
         </el-carousel-item>
     </el-carousel>
     <main>
@@ -268,7 +246,7 @@ onBeforeUnmount(() => {
                 <!-- 文章标题和内容 -->
                 <div style="margin-left: 20px;" @click="goToArticleDetail(article.id)">
                     <h2 class="title" style="line-height: 0;">{{ article.title }}</h2>
-                    <p style="margin-top: 40px;">{{ text[index] }}</p>
+                    <p style="margin-top: 40px;">{{ article.text }}</p>
                 </div>
                 <!-- 文章页脚 -->
                 <div style="display: flex;justify-content: center;">
@@ -310,8 +288,9 @@ onBeforeUnmount(() => {
 }
 
 main {
-    width: 1000px;
+    width: 900px;
     margin: 0 auto;
+    padding: 20px;
     border-radius: 3px;
     box-shadow: 0px 0 5px 0 rgba(0, 0, 0, 0.2);
 }

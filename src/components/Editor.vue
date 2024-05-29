@@ -9,6 +9,7 @@ import { getAllScenicSpotService } from '@/api/scenicSpot';
 import { uploadArticleService } from '@/api/article';
 import router from '@/router';
 
+
 // 编辑器实例，必须用 shallowRef，重要！
 const editorRef = shallowRef();
 
@@ -38,21 +39,30 @@ const checkImg = (file) => {
     } return true;
 }
 
+//上传图片的进度
+const uploadProcess = ref(0);
+
 //上传文件的配置
 editorConfig.MENU_CONF['uploadImage'] = {
     //自定义配置
     async customUpload(file, insertFn) {
         if (checkImg(file)) {
-            let result = await uploadImgService(file);
-            console.log(result);
+            uploadProcess.value = 0;
+            let result = await uploadImgService(file, (progress) => {
+                //上传进度
+                uploadProcess.value = progress;
+            });
             let url = result;
             let alt = '';
             let href = '';
             insertFn(url, alt, href);
         }
+        console.log(article.value.content);
     }
+    
 }
 
+//上传的文章
 const article = ref({
     title: '',
     url: '',
@@ -115,30 +125,32 @@ const chooseProvince = async () => {
     let result = await getAllScenicSpotService(article.value.provinceId);
     scenicSpot.value = result.data;
     //清空景点信息
-    article.value.scenicSpotId='';
+    article.value.scenicSpotId = '';
 }
 
-const uploadArticle = () => {
-    if(article.value.title===''){
+const uploadArticle = async () => {
+    if (article.value.title === '') {
         ElMessage.warning('标题不能为空');
-    }else if(article.value.url===''){
+    } else if (article.value.url === '') {
         ElMessage.warning('请上传封面')
+    } else {
+        let result = await uploadArticleService(article.value);
+        ElMessage.success('发布成功');
+        router.push('/my/article');
     }
-    let result=uploadArticle(article.value);
-    ElMessage.success('发布成功');
-    router.push("/my");
 }
 </script>
 
 <template>
+    <el-progress :percentage="uploadProcess" v-if="uploadProcess !== 100 && uploadProcess !== 0" status="success" />
     <div style="border: 1px solid #ccc; margin-top: 10px">
         <!-- 工具栏 -->
-        <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" style="border-bottom: 1px solid #ccc" />
+        <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" class="toolbar" />
         <!-- 文章 -->
         <div class="article">
             <!-- 标题 -->
             <div class="title">
-                <input v-model="article.title" type="text" placeholder="标题">
+                <input v-model="article.title" type="text" maxlength="20" placeholder="标题(不超过20个字)">
                 <hr class="hr">
             </div>
             <!-- 内容 -->
@@ -148,9 +160,9 @@ const uploadArticle = () => {
             <!-- 结尾 -->
             <div class="foot">
                 <el-upload class="coverImg-uploader" action="/api/uploadImgToOSS" :show-file-list="false"
-                    :on-success="uploadCoverImgSuccess" :before-upload="beforeCoverImgUpload">
+                    name="imageFile" :on-success="uploadCoverImgSuccess" :before-upload="beforeCoverImgUpload">
                     <img v-if="article.url" :src="article.url" class="avatar" />
-                    <div>
+                    <div v-else>
                         <span>+ 添加文章封面</span>
                     </div>
                 </el-upload>
@@ -160,10 +172,10 @@ const uploadArticle = () => {
                         @click="chooseProvince()" />
                 </el-select>
 
-                <el-select v-model="article.scenicSpotId" placeholder="景点"style="width: 120px"
+                <el-select v-model="article.scenicSpotId" placeholder="景点" style="width: 120px"
                     :disabled="!article.provinceId">
                     <el-option v-for="(item, index) in scenicSpot" :key="index" :label="item.sceneRollCall"
-                        :value="item.id"/>
+                        :value="item.id" />
                 </el-select>
                 <el-button type="success" @click="uploadArticle()">发布</el-button>
             </div>
@@ -171,7 +183,15 @@ const uploadArticle = () => {
     </div>
 </template>
 <style scoped>
+.toolbar{
+    border-bottom: 1px solid #ccc;
+    /* position: absolute;
+    top: 10%;
+    left: 0%; */
+}
+
 .article {
+    /* margin-top: 200px; */
     padding: 40px;
 }
 
@@ -215,6 +235,12 @@ const uploadArticle = () => {
     align-items: center;
     font-size: small;
     color: #8c8484;
+}
+
+.coverImg-uploader img {
+    width: 150px;
+    height: 100px;
+    border-radius: 5px;
 }
 
 .foot .el-button {

@@ -3,7 +3,7 @@ import { getMyArticleService, deleteArticleService } from '@/api/article';
 import { likeService, cancelLikeService } from '@/api/like';
 import { collectService, cancelCollectService } from '@/api/collection';
 import { onBeforeMount, ref } from 'vue';
-import { parseJson } from '@/utils/parseJson';
+import { getText } from '@/utils/parseHTML'
 import router from '@/router';
 import { useTokenStore } from '@/stores/token';
 import {
@@ -23,39 +23,13 @@ const deleteDialogVisible = ref(false);
 //待删除的文章id
 const articleIndexForDelete = ref();
 
-//文章的文字内容
-const text = ref([]);
-
 //查询我的文章
 const getMyArticle = async () => {
     let result = await getMyArticleService();
     articles.value = result.data;
     initIcon(articles.value);
-    parseJson(articles.value);
     getText(articles.value);
 }
-
-//提取文本
-const getText = (data) => {
-    for (let i = 0; i < data.length; i++) {
-        let content = data[i].content;
-        let temp = '';
-        let textLen = 118;
-        for (let j = 0; j < content.length; j++) {
-            if (content[j].type === 'text') {
-                if (temp.length <= textLen) {
-                    temp += content[j].value;
-                    if (temp.length > textLen) {
-                        temp = temp.slice(0, textLen) + '...'
-                        break;
-                    }
-                }
-            }
-        }
-        text.value.push(temp);
-    }
-}
-
 
 //初始化收藏喜欢图标
 const initIcon = (data) => {
@@ -177,7 +151,7 @@ const goToArticleDetail = (articleId) => {
                 <!-- 文章标题和内容 -->
                 <div style="margin-left: 20px;" @click="goToArticleDetail(article.id)">
                     <h2 class="title" style="line-height: 0px;">{{ article.title }}</h2>
-                    <p style="margin-top: 40px;">{{ text[index] }}</p>
+                    <p style="margin-top: 40px;">{{ article.text }}</p>
                 </div>
                 <!-- 文章页脚 -->
                 <div style="display: flex;justify-content: center;">

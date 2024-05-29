@@ -6,6 +6,7 @@ import { getFollowedUsers } from '@/api/user';
 import { cancelLikeService, likeService } from '@/api/like.js';
 import { cancelCollectService, collectService } from '@/api/collection.js';
 import LoadingVue from '@/components/Loading.vue';
+import { getText } from '@/utils/parseHTML';
 //用户信息
 const tokenStore = useTokenStore();
 
@@ -28,9 +29,6 @@ const articlePageQueryDTO = ref({
     condition: '',
     searchBy: 'new'
 })
-
-//文章的文字内容
-const text = ref([]);
 
 //滚动条
 const scrollbar = ref(null);
@@ -137,41 +135,6 @@ const initIcon = (data) => {
     }
 }
 
-
-//解析json
-const parseJson = (data) => {
-    for (let i = 0; i < data.length; i++) {
-        try {
-            const jsonObject = JSON.parse(data[i].content);
-            // console.log(jsonObject);
-            data[i].content = jsonObject.content;
-            // console.log(data[i].content);
-        } catch (error) {
-            console.error("无效的 JSON 字符串", error);
-        }
-    }
-}
-
-//提取文本
-const getText = (data) => {
-    for (let i = 0; i < data.length; i++) {
-        let content = data[i].content;
-        let temp = '';
-        for (let j = 0; j < content.length; j++) {
-            if (content[j].type === 'text') {
-                if (temp.length <= 136) {
-                    temp += content[j].value;
-                    if (temp.length > 136) {
-                        temp = temp.slice(0, 136) + '...'
-                        break;
-                    }
-                }
-            }
-        }
-        text.value.push(temp);
-    }
-}
-
 //初始化页面查询、切换用户时查询、搜索
 const searchArticle = async () => {
     //清空页数
@@ -183,12 +146,9 @@ const searchArticle = async () => {
         if (result.data.length < 5) {
             articleIsEnd.value = true;
         }
-        //将json解析为对象
-        parseJson(result.data);
         initIcon(result.data);
         articles.value = result.data;
         articlePageQueryDTO.value.page += 1;
-        text.value = [];
         getText(articles.value);
     } else {
         ElMessage.error("查询异常");
@@ -220,7 +180,6 @@ const fetchMoreArticles = () => {
             if (result.data.length < 5) {
                 articleIsEnd.value = true;
             }
-            parseJson(result.data);
             initIcon(result.data);
             for (let i = 0; i < result.data.length; i++) {
                 articles.value.push(result.data[i]);
@@ -274,7 +233,8 @@ onBeforeMount(async () => {
         </el-scrollbar>
 
         <!-- 文章 -->
-        <el-scrollbar ref="scrollbar" height="630px" style="margin: 60px auto 0; margin-left: 55px;" @scroll="handleScroll()">
+        <el-scrollbar ref="scrollbar" height="630px" style="margin: 60px auto 0; margin-left: 55px;"
+            @scroll="handleScroll()">
             <main>
                 <!-- 文章列表 -->
                 <div v-for="(article, index) in articles" :key="index" class="card">
@@ -284,7 +244,7 @@ onBeforeMount(async () => {
                         <!-- 文章标题和内容 -->
                         <div style="margin-left: 20px;" @click="goToArticleDetail()">
                             <h2 class="title" style="line-height: 0;">{{ article.title }}</h2>
-                            <p style="margin-top: 40px;">{{ text[index] }}</p>
+                            <p style="margin-top: 40px;">{{ article.text }}</p>
                         </div>
                         <!-- 文章页脚 -->
                         <div style="display: flex;justify-content: center;">
@@ -294,7 +254,7 @@ onBeforeMount(async () => {
                             </div>
                             <div class="contentItem">
                                 <el-icon>
-                                    <Location/>
+                                    <Location />
                                 </el-icon>
                                 <span>{{ article.province }}</span>
                             </div>
@@ -308,7 +268,7 @@ onBeforeMount(async () => {
                             </div>
                             <div class="contentItem">
                                 <el-icon>
-                                    <ChatRound/>
+                                    <ChatRound />
                                 </el-icon>
                                 <span>{{ article.comment }}</span>
                             </div>
@@ -324,19 +284,19 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
-.user-list{
+.user-list {
     background-color: rgb(231, 240, 238);
     margin: 5px;
     border-radius: 15px;
 }
 
-.user-list span{
+.user-list span {
     color: black;
     margin-left: 20px;
 }
 
 main {
-    width: 1000px;
+    width: 900px;
     border-radius: 3px;
     box-shadow: 0px 0 5px 0 rgba(0, 0, 0, 0.2);
     margin: 0 auto;

@@ -10,6 +10,5 @@ import  Editor  from '@/components/Editor.vue';
 main{
     width: 1000px;
     margin: 0 auto;
-    z-index:999;
 }
 </style>

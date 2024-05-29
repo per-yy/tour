@@ -6,6 +6,7 @@ import { likeScenicSpotService, cancelLikeScenicSpotService } from "@/api/like";
 import { useTokenStore } from '@/stores/token';
 import router from "@/router";
 import LoadingVue from '@/components/Loading.vue';
+import { ElMessage } from "element-plus";
 import china from "../json/china.json";
 import {
     Search,

@@ -2,7 +2,7 @@
 import { getMyLikeArticleService } from '@/api/article';
 import { likeService, cancelLikeService } from '@/api/like';
 import { collectService, cancelCollectService } from '@/api/collection';
-import { parseJson } from '@/utils/parseJson';
+import { getText } from '@/utils/parseHTML';
 import { onBeforeMount, ref } from 'vue';
 import { useTokenStore } from '@/stores/token';
 import router from '@/router';
@@ -15,38 +15,14 @@ const tokenStore=useTokenStore();
 //喜欢的文章
 const articles = ref([]);
 
-//文章的文字内容
-const text = ref([]);
-
 //查询我收藏的文章
 const getMyLikeArticle = async() => {
     let result = await getMyLikeArticleService();
     articles.value = result.data;
     initIcon(articles.value);
-    parseJson(articles.value);
     getText(articles.value);
 }
 
-//提取文本
-const getText = (data) => {
-    for (let i = 0; i < data.length; i++) {
-        let content = data[i].content;
-        let temp = '';
-        let textLen = 118;
-        for (let j = 0; j < content.length; j++) {
-            if (content[j].type === 'text') {
-                if (temp.length <= textLen) {
-                    temp += content[j].value;
-                    if (temp.length > textLen) {
-                        temp = temp.slice(0, textLen) + '...'
-                        break;
-                    }
-                }
-            }
-        }
-        text.value.push(temp);
-    }
-}
 
 //初始化收藏喜欢图标
 const initIcon = (data) => {
@@ -159,7 +135,7 @@ const goToArticleDetail = (articleId) => {
                 <!-- 文章标题和内容 -->
                 <div style="margin-left: 20px;" @click="goToArticleDetail(article.id)">
                     <h2 class="title" style="line-height: 0px;">{{ article.title }}</h2>
-                    <p style="margin-top: 40px;">{{ text[index] }}</p>
+                    <p style="margin-top: 40px;">{{ article.text }}</p>
                 </div>
                 <!-- 文章页脚 -->
                 <div style="display: flex;justify-content: center;">

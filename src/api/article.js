@@ -37,5 +37,5 @@ export const getMyLikeArticleService=()=>{
 
 //发布文章
 export const uploadArticleService=(article)=>{
-    return request.post("/article/add",article);
+    return request.post("/article/publish",article);
 }

@@ -211,6 +211,12 @@ const sendComment = async () => {
     }
 }
 
+//插入html
+const insertHTML = () => {
+    let targetElement = document.getElementById('articleContent');
+    targetElement.innerHTML = targetElement.innerHTML + article.value.content;
+}
+
 
 //初始化一些数据 例如评论之类
 const initData = () => {
@@ -223,10 +229,10 @@ const initData = () => {
 
 onBeforeMount(async () => {
     await getArticle();
+    insertHTML();
     initData();
     initIcon(article.value);
 })
-
 </script>
 
 <template>
@@ -244,11 +250,8 @@ onBeforeMount(async () => {
         <div class="article">
             <!-- 标题 -->
             <h1>{{ article.title }}</h1>
-            <!-- 内容 -->
-            <div v-for="(item, index) in article.content" :key="index">
-                <p v-if="item.type === 'text'">{{ item.value }}</p>
-                <img v-else-if="item.type === 'image'" :src="item.url" />
-            </div>
+            <!-- 内容 在这插入HTML -->
+            <div id="articleContent"></div>
             <!-- 文章页脚 -->
             <div style="display: flex;justify-content: center;">
                 <div class="contentItem" @click="changeLikeIcon()">
@@ -270,8 +273,8 @@ onBeforeMount(async () => {
         <!-- 根据登录状态不同展示 -->
         <div class="sendComment">
             <img :src="article.user.url" alt="" v-if="isLoggedIn">
-            <el-input autosize type="textarea" placeholder="评论一下叭" v-model="commentContent" :disabled="!isLoggedIn"
-                @keydown.enter="sendComment()"></el-input>
+            <el-input autosize type="textarea" placeholder="评论一下叭" v-model="commentContent"
+                :disabled="!isLoggedIn"></el-input>
             <el-button @click="sendComment()" :disabled="!isLoggedIn">{{ isLoggedIn ? '发送' : '请先登录' }}</el-button>
         </div>
         <div class="comment">
@@ -320,8 +323,9 @@ main {
     width: 80px;
 }
 
-.article img {
-    width: 900px;
+#articleContent p img {
+    display: inline !important;
+    max-width: 100%;
 }
 
 .contentItem {

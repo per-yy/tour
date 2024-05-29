@@ -85,6 +85,7 @@ const reg = async () => {
         let result = await regService(user.value);
         if (result.code === 1) {
             ElMessage.success("注册成功")
+            regDialogVisible.value = false;
         } else {
             ElMessage.error(result.msg);
         }
@@ -102,7 +103,7 @@ const send = async () => {
             ElMessage.success('发送成功')
             verificationCode.value = result.data;
         } else {
-            ElMessage.error('发送失败')
+            ElMessage.error(result.msg)
         }
     }
 }
@@ -120,7 +121,7 @@ const disableButton = () => {
 
 const handleAvatarSuccess = (response, uploadFile) => {
     // user.value.url = URL.createObjectURL(uploadFile.raw)
-    user.value.url=response;
+    user.value.url = response;
 }
 
 const beforeAvatarUpload = (rawFile) => {
