@@ -124,8 +124,9 @@ const handleAvatarSuccess = (response, uploadFile) => {
     user.value.url = response;
 }
 
+const imgType=['image/jpeg','image/png','image/webp']
 const beforeAvatarUpload = (rawFile) => {
-    if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
+    if (!imgType.includes(rawFile.type)) {
         ElMessage.error('图片格式错误')
         return false
     } else if (rawFile.size / 1024 / 1024 > 2) {
@@ -182,7 +183,7 @@ const goToWriteArticle = () => {
                         style="width: 467px;" />
                 </el-form-item>
                 <el-form-item>
-                    <el-input class="input" v-model="user.password" autocomplete="off" placeholder="密码"
+                    <el-input class="input" type="password" v-model="user.password" autocomplete="off" placeholder="密码"
                         style="width: 467px;" />
                 </el-form-item>
             </el-form>

@@ -151,7 +151,7 @@ const cancelCollect = async (id) => {
 <style scoped>
 .card {
     display: flex;
-    height: 180px;
+    height: 200px;
     margin-bottom: 10px;
     margin-top: 10px;
     cursor: pointer;
@@ -162,7 +162,8 @@ h2 {
 }
 
 .card:hover {
-    background-color: #F8F8F8;
+    background-color: #eaf6f1;
+    border-radius: 8px;
 }
 
 .card h2:hover {
@@ -170,12 +171,14 @@ h2 {
 }
 
 .card p:hover {
-    color: rgb(91, 84, 84);
+    color: rgb(84, 91, 88);
 }
 
 .article_img {
     margin: 5px;
     border-radius: 5px;
+    width: 342px;
+    height: 180px;
 }
 
 .contentItem {

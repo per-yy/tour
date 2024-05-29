@@ -1,21 +1,11 @@
 <script setup>
 import { getMyArticleService, deleteArticleService } from '@/api/article';
-import { likeService, cancelLikeService } from '@/api/like';
-import { collectService, cancelCollectService } from '@/api/collection';
 import { onBeforeMount, ref } from 'vue';
-import { getText } from '@/utils/parseHTML'
-import router from '@/router';
-import { useTokenStore } from '@/stores/token';
-import {
-    Location,
-    ChatRound,
-    Delete
-} from '@element-plus/icons-vue';
+import ArticleListVue from '@/components/ArticleList.vue';
 import { ElMessage } from 'element-plus';
+import { getText } from '@/utils/parseHTML';
 
-const articles = ref([{}]);
-
-const tokenStore = useTokenStore();
+const articles = ref([]);
 
 //删除文章时的提示
 const deleteDialogVisible = ref(false);
@@ -39,90 +29,6 @@ const initIcon = (data) => {
     }
 }
 
-//修改喜欢图标
-const changeLikeIcon = async (index) => {
-    if (tokenStore.token.jwt === '') {
-        ElMessage.error("请先登录")
-    } else if (articles.value[index].isLiked === 1) {
-        //修改成功则改样式及数量
-        if (await cancelLike(articles.value[index].id)) {
-            articles.value[index].isLiked = 0;
-            articles.value[index].likeIconClass = 'icon-hear';
-            articles.value[index].likes--;
-        }
-    } else {
-        if (await like(articles.value[index].id)) {
-            articles.value[index].isLiked = 1;
-            articles.value[index].likeIconClass = 'icon-hear-full';
-            articles.value[index].likes++;
-        }
-    }
-}
-
-//喜欢          
-const like = async (id) => {
-    let result = await likeService(id);
-    if (result.code === 1) {
-        return true;
-    } else {
-        ElMessage.error(result.msg);
-        return false;
-    }
-}
-
-//取消喜欢
-const cancelLike = async (id) => {
-    let result = await cancelLikeService(id);
-    if (result.code === 1) {
-        return true;
-    } else {
-        ElMessage.error(result.msg);
-        return false;
-    }
-}
-
-//修改收藏图标 调用接口
-const changeCollectionIcon = async (index) => {
-    if (tokenStore.token.jwt === '') {
-        ElMessage.error("请先登录")
-    } else if (articles.value[index].isCollected === 1) {
-        //修改成功则改样式及数量
-        if (await cancelCollect(articles.value[index].id)) {
-            articles.value[index].isCollected = 0;
-            articles.value[index].collectionIconClass = 'icon-star';
-            articles.value[index].collection--;
-        }
-    } else {
-        if (await collect(articles.value[index].id)) {
-            articles.value[index].isCollected = 1;
-            articles.value[index].collectionIconClass = 'icon-star-full';
-            articles.value[index].collection++;
-        }
-    }
-}
-
-//收藏
-const collect = async (id) => {
-    let result = await collectService(id);
-    if (result.code === 1) {
-        return true;
-    } else {
-        ElMessage.error(result.msg);
-        return false;
-    }
-}
-
-//取消收藏接口
-const cancelCollect = async (id) => {
-    let result = await cancelCollectService(id);
-    if (result.code === 1) {
-        return true;
-    } else {
-        ElMessage.error(result.msg);
-        return false;
-    }
-}
-
 //删除文章
 const deleteArticle = () => {
     let result = deleteArticleService(articles.value[articleIndexForDelete.value].id);
@@ -136,53 +42,12 @@ onBeforeMount(async () => {
     await getMyArticle();
 })
 
-const goToArticleDetail = (articleId) => {
-    router.push({ name: 'ArticleDetail', params: { articleId } });
-}
+
 </script>
 
 <template>
     <main>
-        <!-- 文章列表 -->
-        <div v-for="(article, index) in articles" :key="index" class="card">
-            <!-- 文章封面 -->
-            <img :src="article.url" alt="加载失败" class="article_img" @click="goToArticleDetail(article.id)">
-            <div>
-                <!-- 文章标题和内容 -->
-                <div style="margin-left: 20px;" @click="goToArticleDetail(article.id)">
-                    <h2 class="title" style="line-height: 0px;">{{ article.title }}</h2>
-                    <p style="margin-top: 40px;">{{ article.text }}</p>
-                </div>
-                <!-- 文章页脚 -->
-                <div style="display: flex;justify-content: center;">
-                    <div class="contentItem">
-                        <el-icon>
-                            <Location />
-                        </el-icon>
-                        <span>{{ article.province }}</span>
-                    </div>
-                    <div class="contentItem" @click="changeCollectionIcon(index)">
-                        <span :class="['iconfont', article.collectionIconClass]"></span>
-                        <span>{{ article.collection }}</span>
-                    </div>
-                    <div class="contentItem" @click="changeLikeIcon(index)">
-                        <span :class="['iconfont', article.likeIconClass]"></span>
-                        <span>{{ article.likes }}</span>
-                    </div>
-                    <div class="contentItem">
-                        <el-icon>
-                            <ChatRound />
-                        </el-icon>
-                        <span>{{ article.comment }}</span>
-                    </div>
-                    <div class="contentItem" @click="deleteDialogVisible = true; articleIndexForDelete = index">
-                        <el-icon>
-                            <Delete />
-                        </el-icon>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <ArticleListVue :articles></ArticleListVue>
     </main>
     <!-- 删除文章时的确认提示 -->
     <el-dialog v-model="deleteDialogVisible" title="提示" width="20%" center align-center>
@@ -200,51 +65,5 @@ const goToArticleDetail = (articleId) => {
 <style scoped>
 main {
     margin-top: 0px;
-}
-
-.card {
-    display: flex;
-    height: 180px;
-    margin-bottom: 10px;
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-h2 {
-    color: rgb(91, 85, 85);
-}
-
-.card:hover {
-    background-color: #F8F8F8;
-}
-
-.card h2:hover {
-    color: rgb(9, 154, 43);
-}
-
-.card p:hover {
-    color: rgb(91, 84, 84);
-}
-
-.article_img {
-    margin: 5px;
-    border-radius: 5px;
-}
-
-.contentItem {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-grow: 1;
-}
-
-.contentItem span {
-    margin-left: 10px;
-}
-
-.avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
 }
 </style>

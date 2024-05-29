@@ -29,7 +29,7 @@ const editorConfig = {
 //检查图片
 const checkImg = (file) => {
     //图片上传的类型
-    const acceptedImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp'];
+    const acceptedImageTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/bmp','image/webp'];
     if (!acceptedImageTypes.includes(file.type)) {
         ElMessage.error('图片格式错误')
         return false;
@@ -57,7 +57,6 @@ editorConfig.MENU_CONF['uploadImage'] = {
             let href = '';
             insertFn(url, alt, href);
         }
-        console.log(article.value.content);
     }
     
 }
@@ -185,13 +184,9 @@ const uploadArticle = async () => {
 <style scoped>
 .toolbar{
     border-bottom: 1px solid #ccc;
-    /* position: absolute;
-    top: 10%;
-    left: 0%; */
 }
 
 .article {
-    /* margin-top: 200px; */
     padding: 40px;
 }
 

@@ -6,14 +6,10 @@ import {
 import { ElMessage } from 'element-plus';
 import { ref, onBeforeUnmount, onBeforeMount } from 'vue'
 import LoadingVue from '@/components/Loading.vue';
-import { useTokenStore } from '@/stores/token';
 
 import { getText } from '@/utils/parseHTML';
 import { getBannerService } from '@/api/banner';
 import ArticleListVue from '@/components/ArticleList.vue'
-
-//用户信息
-const tokenStore = useTokenStore();
 
 //加载状态变量
 const loading = ref(false);
