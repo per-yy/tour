@@ -148,6 +148,12 @@ const goToWriteArticle = () => {
     router.push('/writeArticle')
 }
 
+//退出登录
+const logout = () => {
+    tokenStore.removeToken();
+    tokenStore.removeUserInfo();
+    router.push('/')
+}
 </script>
 
 <template>
@@ -171,6 +177,7 @@ const goToWriteArticle = () => {
                 <el-dropdown-menu>
                     <el-dropdown-item @click="goToMyPage()">个人中心</el-dropdown-item>
                     <el-dropdown-item divided @click="goToWriteArticle()">发布文章</el-dropdown-item>
+                    <el-dropdown-item divided @click="logout()">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
             </template>
         </el-dropdown>
