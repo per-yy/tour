@@ -73,7 +73,9 @@ const login = async () => {
 const reg = async () => {
     if (user.value.username === '' || user.value.email === '' || user.value.password === '' || user.value.url === '') {
         ElMessage.error("请填写完整信息")
-    } else if (user.value.password.length < 8) {
+    } else if (user.value.username.length > 8) {
+        ElMessage.error("昵称过长")
+    } if (user.value.password.length < 8) {
         ElMessage.error("密码不能少于8位")
     } else if (verificationCode.value.code === '') {
         ElMessage.error("请填写验证码")
@@ -124,7 +126,7 @@ const handleAvatarSuccess = (response, uploadFile) => {
     user.value.url = response;
 }
 
-const imgType=['image/jpeg','image/png','image/webp']
+const imgType = ['image/jpeg', 'image/png', 'image/webp']
 const beforeAvatarUpload = (rawFile) => {
     if (!imgType.includes(rawFile.type)) {
         ElMessage.error('图片格式错误')

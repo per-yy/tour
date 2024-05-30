@@ -6,6 +6,9 @@ import { getFollowedUsers } from '@/api/user';
 import LoadingVue from '@/components/Loading.vue';
 import { getText } from '@/utils/parseHTML';
 import ArticleListVue from '@/components/ArticleList.vue';
+import { useTokenStore } from '@/stores/token';
+
+const tokenStore = useTokenStore();
 
 //被选中的用户
 const selectedUserIndex = ref(-1);
@@ -131,7 +134,8 @@ onBeforeMount(async () => {
 <template>
     <!-- 加载效果 -->
     <LoadingVue v-if="loading == true"></LoadingVue>
-    <div style="display: flex;">
+    <div v-if="tokenStore.token.jwt === ''" class="not-login"><span>你还没有登录</span></div>
+    <div v-else style="display: flex;">
         <!-- 侧边栏 -->
         <el-scrollbar height="630px" style="width: 200px;">
             <el-menu default-active="0">
@@ -148,7 +152,7 @@ onBeforeMount(async () => {
         </el-scrollbar>
 
         <!-- 文章 -->
-        <el-scrollbar ref="scrollbar" height="630px" style="margin: 0 auto 0; margin-left: 150px;"
+        <el-scrollbar ref="scrollbar" height="640px" style="margin: 0 auto 0; margin-left: 150px;"
             @scroll="handleScroll()">
             <main>
                 <ArticleListVue :articles></ArticleListVue>
@@ -161,6 +165,13 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
+.not-login{
+    font-size: xx-large;
+    width: fit-content;
+    margin: 200px auto 0;
+    color: rgb(208, 203, 196);
+}
+
 .user-list {
     background-color: rgb(231, 240, 238);
     margin: 5px;

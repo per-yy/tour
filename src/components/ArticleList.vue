@@ -133,7 +133,7 @@ const deleteArticle = async () => {
     <div v-for="(article, index) in props.articles" :key="index" class="card">
         <!-- 文章封面 -->
         <img :src="article.url" alt="加载失败" class="article_img" @click="goToArticleDetail(article.id)">
-        <div style="width: 500px;">
+        <div style="width: 560px;">
             <!-- 文章标题和内容 -->
             <div style="margin-left: 20px;height: 135px;" @click="goToArticleDetail(article.id)">
                 <h2 class="title" style="line-height: 0;">{{ article.title }}</h2>
@@ -141,11 +141,11 @@ const deleteArticle = async () => {
             </div>
             <!-- 文章页脚 -->
             <div style="display: flex;justify-content: center;">
-                <div class="contentItem">
+                <div class="contentItem" style="width: 170px; margin-left: 20px;">
                     <img class="avatar" :src="article.user.url" alt="">
                     <span>{{ article.user.username }}</span>
                 </div>
-                <div class="contentItem">
+                <div class="contentItem" style="width: 120px;">
                     <el-icon>
                         <Location />
                     </el-icon>
@@ -217,20 +217,20 @@ h2 {
 .article_img {
     margin: 5px;
     border-radius: 5px;
-    width: 342px;
+    width: 320px;
     height: 180px;
     object-fit: cover;
 }
 
 .contentItem {
     display: flex;
-    justify-content: center;
     align-items: center;
+    width: 60px;
     flex-grow: 1;
 }
 
 .contentItem span {
-    margin-left: 10px;
+    margin-left: 5px;
 }
 
 .avatar {

@@ -12,7 +12,7 @@ const updateUserInfoDialogVisible = ref(false);
 
 const updatePasswordDialogVisible = ref(false);
 
-const imgType=['image/jpeg','image/png','image/webp']
+const imgType = ['image/jpeg', 'image/png', 'image/webp']
 
 //用户信息 用于修改信息
 const user = ref({
@@ -40,6 +40,10 @@ const init = () => {
 }
 //修改信息
 const updateUserInfo = async () => {
+    if (user.value.username.length > 8) {
+        ElMessage.error("昵称过长")
+        return;
+    }
     let result = await updateUserInfoService(user.value);
     ElMessage.success('修改成功');
     //修改token
@@ -48,7 +52,7 @@ const updateUserInfo = async () => {
 }
 
 const handleAvatarSuccess = (response, uploadFile) => {
-    user.value.url=response;
+    user.value.url = response;
 }
 
 const beforeAvatarUpload = (rawFile) => {
@@ -65,7 +69,7 @@ const beforeAvatarUpload = (rawFile) => {
 const updatePassword = async () => {
     if (password.value.newPassword.length < 8) {
         ElMessage.error('密码不能少于8位')
-    } else if (password.value.oldPassword==='') {
+    } else if (password.value.oldPassword === '') {
         ElMessage.error('原密码不为空')
     } else {
         let result = await updatePasswordService(password.value);
@@ -118,7 +122,8 @@ onBeforeMount(() => {
             </div>
             <el-form :model="user">
                 <el-form-item label="用户名">
-                    <el-input class="input" v-model="user.username" autocomplete="off" />
+                    <el-input class="input" v-model="user.username" autocomplete="off"
+                        @keydown.enter="updateUserInfo()" />
                 </el-form-item>
             </el-form>
             <template #footer>
