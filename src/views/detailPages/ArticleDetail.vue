@@ -90,7 +90,7 @@ const initIcon = (data) => {
 
 //修改喜欢图标
 const changeLikeIcon = async () => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn.value) {
         ElMessage.error("请先登录")
     } else if (article.value.isLiked === 1) {
         //修改成功则改样式及数量
@@ -132,7 +132,7 @@ const cancelLike = async (id) => {
 
 //修改收藏图标 调用接口
 const changeCollectionIcon = async () => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn.value) {
         ElMessage.error("请先登录")
     } else if (article.value.isCollected === 1) {
         //修改成功则改样式及数量
@@ -185,7 +185,7 @@ const changeFollowState = async () => {
         }
     } else {
         //判断用户是否登录
-        if (!isLoggedIn) {
+        if (!isLoggedIn.value) {
             ElMessage.error('请先登录')
         } else {
             let result = await followUserService(article.value.user.id);
@@ -200,12 +200,25 @@ const changeFollowState = async () => {
 
 //发送评论
 const sendComment = async () => {
-    comment.value.content = commentContent.value;
+    if (commentContent.value === '') {
+        ElMessage.error("评论不能为空")
+        return;
+    }
+    let tempComment = {
+        user: {
+            username: tokenStore.token.username,
+            url: tokenStore.token.url
+        },
+        content: commentContent.value,
+        articleId: articleId.value
+    };
+    comment.value = tempComment;
     let result = await sendCommentService(comment.value);
     if (result.code === 1) {
         //评论
         article.value.commentContent.unshift(comment.value);
-        ElMessage.success('评论成功')
+        ElMessage.success('评论成功');
+        commentContent.value = ''
     } else {
         ElMessage.error(result.msg);
     }
@@ -273,7 +286,7 @@ onBeforeMount(async () => {
         </div>
         <!-- 根据登录状态不同展示 -->
         <div class="sendComment">
-            <img :src="article.user.url" alt="" v-if="isLoggedIn">
+            <img :src="tokenStore.token.url" alt="" v-if="isLoggedIn">
             <el-input autosize type="textarea" placeholder="评论一下叭" v-model="commentContent"
                 :disabled="!isLoggedIn"></el-input>
             <el-button @click="sendComment()" :disabled="!isLoggedIn">{{ isLoggedIn ? '发送' : '请先登录' }}</el-button>
@@ -368,6 +381,7 @@ main {
 
 .commentItem {
     margin-top: 10px;
+    border-bottom: 1px solid rgb(241, 233, 233);
 }
 
 .commentItem div {

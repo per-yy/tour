@@ -17,9 +17,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {//获取路径中包含api的请求
-        // target: 'http://localhost:8080',
+        target: 'http://localhost:8080',
         //zyt
-        target: 'http://192.168.43.185:8080',
+        // target: 'http://192.168.43.185:8080',
+        //zyt 他的热点
+        // target:'http://192.168.218.47:8080',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }

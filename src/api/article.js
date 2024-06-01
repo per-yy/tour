@@ -22,7 +22,7 @@ export const getMyArticleService=()=>{
 
 //删除文章
 export const deleteArticleService=(id)=>{
-    return request.post(`/article/delete/${id}`);
+    return request.delete(`/admin/article/delete/${id}`);
 }
 
 //查询我收藏的文章

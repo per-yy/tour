@@ -227,7 +227,7 @@ const logout = () => {
                     <el-input class="input" v-model="user.email" style="margin-left: 15px;" autocomplete="off" />
                 </el-form-item>
                 <el-form-item label="密码">
-                    <el-input class="input" v-model="user.password" style="margin-left: 15px;" autocomplete="off" />
+                    <el-input class="input" type="password" v-model="user.password" style="margin-left: 15px;" autocomplete="off" />
                 </el-form-item>
                 <el-form-item label="验证码">
                     <el-input class="input" v-model="user.code" autocomplete="off" style="width: 300px;" />
